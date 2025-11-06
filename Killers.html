@@ -1,0 +1,87 @@
+<!-- 🔻 Dexter dynamic suspects board (updated: wiki API images) -->
+<script>
+const suspects = [
+  { name: "Dexter Morgan", threat: "High",
+    bio: "Forensic blood analyst for Miami Metro who follows the Code of Harry.",
+    wiki: "https://en.wikipedia.org/wiki/Dexter_Morgan" },
+  { name: "Brian Moser", threat: "High",
+    bio: "The Ice Truck Killer – Dexter’s estranged brother with a chilling artistry.",
+    wiki: "https://en.wikipedia.org/wiki/Brian_Moser_(Dexter)" },
+  { name: "Arthur Mitchell", threat: "Extreme",
+    bio: "The Trinity Killer – methodical family annihilator following ritual patterns.",
+    wiki: "https://en.wikipedia.org/wiki/Trinity_Killer" },
+  { name: "Miguel Prado", threat: "Medium",
+    bio: "Assistant District Attorney drawn into Dexter’s moral spiral.",
+    wiki: "https://dexter.fandom.com/wiki/Miguel_Prado" }
+];
+
+const grid = document.getElementById('killerGrid');
+const search = document.getElementById('killerSearch');
+const caseModalEl = document.getElementById('caseModal');
+const MODAL = caseModalEl ? new bootstrap.Modal(caseModalEl) : null;
+const $qs = (sel)=>document.querySelector(sel);
+const LS = { get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
+
+// --- helper to fetch image from Wikipedia ---
+async function getWikiImage(title){
+  try{
+    const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=400&origin=*&titles=${encodeURIComponent(title)}`);
+    const data = await res.json();
+    const pages = data.query?.pages || {};
+    const page = Object.values(pages)[0];
+    return page?.thumbnail?.source || "https://via.placeholder.com/400x250?text=Dexter";
+  }catch(e){ return "https://via.placeholder.com/400x250?text=Dexter"; }
+}
+
+// --- render suspects dynamically (loops + async images) ---
+async function render(list){
+  grid.innerHTML='';
+  for(const s of list){
+    const img = await getWikiImage(s.name);
+    const card=document.createElement('div');
+    card.className='killer-card card p-2 bg-dark text-light fade-in-up';
+    card.innerHTML=`
+      <img src="${img}" alt="${s.name}">
+      <div class="mt-2 d-flex justify-content-between align-items-start">
+        <div><h5 class="mb-1">${s.name}</h5><span class="badge ${badgeClass(s.threat)}">${s.threat}</span></div>
+        <button class="btn btn-outline-danger btn-sm btn-open">Open Case</button>
+      </div>`;
+    card.querySelector('.btn-open').addEventListener('click',()=>openCase({...s,img}));
+    grid.appendChild(card);
+  }
+  grid.classList.remove('hidden-on-load'); grid.classList.add('fade-in-up');
+}
+
+function badgeClass(level){ if(level==='Extreme')return'text-bg-danger'; if(level==='High')return'text-bg-warning'; return'text-bg-secondary'; }
+
+function openCase(s){
+  if(!MODAL) return;
+  $qs('#caseImg').src=s.img;
+  $qs('#caseName').textContent=s.name;
+  $qs('#caseThreat').textContent=s.threat;
+  $qs('#caseBio').textContent=s.bio;
+  $qs('#caseWiki').href=s.wiki;
+  MODAL.show();
+  LS.set('lastCase', s);
+}
+
+document.getElementById('pinCase')?.addEventListener('click',()=>{
+  const s={name:$qs('#caseName').textContent, threat:$qs('#caseThreat').textContent, img:$qs('#caseImg').src, wiki:$qs('#caseWiki').href};
+  const board=LS.get('pinnedCases',[]);
+  if(!board.some(x=>x.name===s.name)){ board.push(s); LS.set('pinnedCases',board); }
+  alert(`Pinned: ${s.name} (${s.threat})`);
+  MODAL.hide();
+});
+
+function doSearch(){
+  const q=(search?.value||'').trim().toLowerCase();
+  LS.set('killerSearch', q);
+  const filtered=suspects.filter(s=>s.name.toLowerCase().includes(q));
+  render(filtered);
+}
+search?.addEventListener('keyup', doSearch);
+
+// init
+if(search){ search.value=LS.get('killerSearch',''); }
+render(suspects.filter(s => !search || s.name.toLowerCase().includes(search.value.toLowerCase())));
+</script>
