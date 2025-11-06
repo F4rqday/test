@@ -155,7 +155,7 @@
     }, 1000);
 </script>
 
-<!-- 🔻 Dexter: enhanced Access Terminal validation -->
+
 <script>
 (function(){
   const form=document.getElementById('accessForm');
@@ -164,7 +164,7 @@
   const pass=document.getElementById('password');
   const level=document.getElementById('accessLevel');
   const msg=document.getElementById('formMsg');
-  const reUser=/^[A-Za-z][A-Za-z0-9_\-]{2,}$/; // минимум 3 символа, латиница/цифры/_-
+  const reUser=/^[A-Za-z][A-Za-z0-9_\-]{2,}$/; 
 
   function setState(el, ok, text){
     if(!el) return;

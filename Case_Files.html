@@ -155,25 +155,24 @@
     });
 </script>
 
-<!-- 🔻 Dexter: persist Case Files (To-Do + Evidence) -->
 <script>
 (function(){
   const LSK={get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 
-  // To-Do
+
   const list=document.getElementById('todoList');
   const add=document.getElementById('addBtn');
   if(list){
-    // restore
+
     const saved=LSK.get('caseTodos',[]);
     if(saved.length){ list.innerHTML=''; saved.forEach(html=>{ const li=document.createElement('li'); li.className='list-group-item d-flex justify-content-between align-items-center'; li.innerHTML=html; list.appendChild(li); }); }
-    // delegation
+
     list.addEventListener('click', (e)=>{ if(e.target.closest('.doneBtn')||e.target.closest('.delBtn')) save(); });
     add?.addEventListener('click', save);
     function save(){ const state=[...list.children].map(li=>li.innerHTML); LSK.set('caseTodos', state); }
   }
 
-  // Evidence Switcher
+  
   const viewer=document.getElementById('evidenceImg');
   const srcLink=document.getElementById('sourceLink');
   const change=document.getElementById('changeImg');
